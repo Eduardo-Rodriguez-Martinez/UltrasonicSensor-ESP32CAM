@@ -41,7 +41,7 @@ Ultrasonic ultrasonic(Trig, Echo); // Este objeto maneja la lecutra del sensor H
 
 // Variables Globales
 long timeNow, timeLast; // Variables de control de tiempo no bloqueante
-int distance;
+int distance = 0, marca_tiempo = 0, segundos = 0;
 
 // Funciones
 void start_wifi();  //Funcion encargada de conectarse al WiFi
@@ -62,7 +62,7 @@ void setup() {
 
 void loop() {
     timeNow = millis ();  // Seguimiento de tiempo
-    if (timeNow - timeLast > 0200) {  //Comprueba que ya paso un segundo
+    if (timeNow - timeLast > 5000) {  //Comprueba que ya paso un segundo
       marca_tiempo++;
       //Contar los segundos
       if(marca_tiempo%5==0){
@@ -97,7 +97,7 @@ void start_wifi(){
 void enviar_datos_mqtt(){
   if (client.connected()){
     char payload[25];
-    String str = "Suma: "+ String(marca_tiempo)+ "\nValor: "+ cadena;
+    String str = "Suma: "+ String(marca_tiempo)+ "\nDist: "+ String(distance);
     str.toCharArray(payload, 24);
     client.publish(topic, payload);
   }else{
@@ -124,85 +124,5 @@ void conectar_Broker() {
       Serial.println(" Intentamos de nuevo en 5 segundos");
       delay(5000);
     }
-  }
-}
-
-void correr_bits(int s, int i, bool dir){
-  //Hace el corrimiento de leds dependiendo de en que segundo dentro del ciclo se encuentre
-  if(s<5){
-    dir==true?asc_exclusivo(i):des_aditivo(i);
-  }else if(s>=5 && s<10){
-    dir==true?asc_aditivo(i):des_exclusivo(i);
-  }else if(s>=10 && s<15){
-    dir==true?des_exclusivo(i):asc_aditivo(i);
-  }else if(s>=15 && s<20){
-    dir==true?des_aditivo(i):asc_exclusivo(i);
-  }
-}
-
-void asc_aditivo(int i) {
-    if(i==0){
-      patronLEDs=0b00000000;
-    }else if(i==1){
-      patronLEDs=0b00001000;
-    }else{
-      patronLEDs=((patronLEDs>>1)|patronLEDs); //Secuencia aditiva ascendente
-    }
-}
-
-void asc_exclusivo(int i) {
-  if(i==1){
-    patronLEDs=0b00001000;
-  }else{
-    patronLEDs>>=1; //Secuencia exclusiva ascendente
-  }
-}
-
-void des_aditivo(int i) {
-    if(i==0){
-      patronLEDs=0b00000000;
-    }else if(i==1){
-      patronLEDs=0b00000001;
-    }else{
-      patronLEDs=((patronLEDs<<1)|patronLEDs); //Secuencia descendente aditiva
-    }
-}
-
-void des_exclusivo(int i) {
-    if(i==1){
-      patronLEDs=0b00000001;
-    }else{
-      patronLEDs<<=1; //Secuencia descendente exclusiva
-    }
-}
-
-void prender_led(char bits){
-  if((bits & 0b00001000)==0b00001000){
-    digitalWrite(LED1,HIGH);
-    cadena[0]='1';
-  }else{
-    digitalWrite(LED1,LOW);
-    cadena[0]='0';
-  }
-  if((bits & 0b00000100)==0b00000100){
-    digitalWrite(LED2,HIGH);
-    cadena[1]='1';
-  }else{
-    digitalWrite(LED2,LOW);
-    cadena[1]='0';
-  }
-  if((bits & 0b00000010)==0b00000010){
-    digitalWrite(LED3,HIGH);
-    cadena[2]='1';
-  }else{
-    digitalWrite(LED3,LOW);
-    cadena[2]='0';
-  }
-  if((bits & 0b00000001)==0b00000001){
-    digitalWrite(LED4,HIGH);
-    cadena[3]='1';
-  }else{
-    digitalWrite(LED4,LOW);
-    cadena[3]='0';
   }
 }
