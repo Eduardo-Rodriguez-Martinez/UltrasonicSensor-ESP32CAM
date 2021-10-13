@@ -28,13 +28,16 @@
 #define password "3C046100F16E"    // Contraseña de red
 
 //Datos de MQTT
-#define mqtt_server "192.168.0.16" // IP de mi broker local
+//#define mqtt_server "192.168.0.16" // IP de mi broker local
+#define mqtt_server "3.122.36.163" 
 #define mqtt_port 1883           // Puerto de conexión
-#define clientID "ESP32CAMClient"  // ID del cliente
-#define topic "esp32/data"         // Tema para publicar/subscribirse
+//#define clientID "ESP32CAMClient"  // ID del cliente
+#define clientID "rome810407"
+//#define topic "esp32/data"         // Tema para publicar/subscribirse
+#define topic "codigoiot/distancia/rome810407"
 
 // Objetos
-IPAddress server(192,168,0,16);
+//IPAddress server(3,122,36,163);
 WiFiClient espClient;           // Este objeto maneja los datos de conexion WiFi
 PubSubClient client(espClient); // Este objeto maneja los datos de conexion al broker
 Ultrasonic ultrasonic(Trig, Echo); // Este objeto maneja la lecutra del sensor HC-SR04
@@ -62,16 +65,16 @@ void setup() {
 
 void loop() {
     timeNow = millis ();  // Seguimiento de tiempo
-    if (timeNow - timeLast > 5000) {  //Comprueba que ya paso un segundo
+    if (timeNow - timeLast > 1000) {  //Comprueba que ya paso un segundo
       marca_tiempo++;
       //Contar los segundos
+      segundos++; //Aumenta el contador de los segundos
       if(marca_tiempo%5==0){
-        segundos++; //Aumenta el contador de los segundos
         printf("Segundos: %i\n", segundos);
+        distance = ultrasonic.read();
+        printf("Distance in CM: %i\n", distance);
+        enviar_datos_mqtt();  //Envia los datos al mqtt
       }
-      distance = ultrasonic.read();
-      printf("Distance in CM: %i\n", distance);
-      enviar_datos_mqtt();  //Envia los datos al mqtt
       timeLast = millis (); // Inicia el control de tiempo
     }
 }
@@ -97,7 +100,8 @@ void start_wifi(){
 void enviar_datos_mqtt(){
   if (client.connected()){
     char payload[25];
-    String str = "Suma: "+ String(marca_tiempo)+ "\nDist: "+ String(distance);
+    //String str = "Suma: "+ String(marca_tiempo)+ "\nDist: "+ String(distance);
+    String str = String(distance);
     str.toCharArray(payload, 24);
     client.publish(topic, payload);
   }else{
